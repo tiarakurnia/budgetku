@@ -75,7 +75,11 @@ export default function BudgetPage() {
 
     const totalBudget = budgets.reduce((a, b) => a + b.limit, 0);
     const totalSpent = budgets.reduce((a, b) => a + b.spent, 0);
-    const usagePerc = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+
+    const activeMonth = months.find(m => m.id === parseInt(selectedMonthId));
+    const totalIncome = activeMonth ? activeMonth.income : 0;
+    const unallocated = totalIncome - totalBudget;
+    const usagePerc = totalIncome > 0 ? (totalSpent / totalIncome) * 100 : 0;
 
     return (
         <>
@@ -99,7 +103,11 @@ export default function BudgetPage() {
                 {/* Overview */}
                 <div className="stat-grid" style={{ marginBottom: 28 }}>
                     <div className="stat-card purple animate-in">
-                        <div className="stat-card-label">Total Budget</div>
+                        <div className="stat-card-label">Total Pemasukan</div>
+                        <div className="stat-card-value" style={{ fontSize: 22, marginTop: 8 }}>{fmt(totalIncome)}</div>
+                    </div>
+                    <div className="stat-card teal animate-in">
+                        <div className="stat-card-label">Terlokasi</div>
                         <div className="stat-card-value" style={{ fontSize: 22, marginTop: 8 }}>{fmt(totalBudget)}</div>
                     </div>
                     <div className="stat-card pink animate-in">
@@ -107,12 +115,8 @@ export default function BudgetPage() {
                         <div className="stat-card-value" style={{ fontSize: 22, marginTop: 8 }}>{fmt(totalSpent)}</div>
                     </div>
                     <div className="stat-card green animate-in">
-                        <div className="stat-card-label">Sisa Budget</div>
-                        <div className="stat-card-value" style={{ fontSize: 22, marginTop: 8 }}>{fmt(totalBudget - totalSpent)}</div>
-                    </div>
-                    <div className="stat-card teal animate-in">
-                        <div className="stat-card-label">Pemakaian</div>
-                        <div className="stat-card-value" style={{ fontSize: 22, marginTop: 8 }}>{Math.round(usagePerc)}%</div>
+                        <div className="stat-card-label">Sisa (Unallocated)</div>
+                        <div className="stat-card-value" style={{ fontSize: 22, marginTop: 8 }}>{fmt(unallocated)}</div>
                     </div>
                 </div>
 
@@ -132,7 +136,7 @@ export default function BudgetPage() {
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 10, fontSize: 12, color: 'var(--text-muted)' }}>
                             <span>Terpakai: {fmt(totalSpent)}</span>
-                            <span>Total Budget: {fmt(totalBudget)}</span>
+                            <span>Total Pemasukan: {fmt(totalIncome)}</span>
                         </div>
                     </div>
                 )}

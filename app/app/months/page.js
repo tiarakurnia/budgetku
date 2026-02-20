@@ -124,11 +124,11 @@ export default function MonthsPage() {
                                 </div>
                                 <div className="month-card-stats">
                                     <div className="month-card-stat">
-                                        <div className="month-card-stat-value text-teal">{fmt(0)}</div>
+                                        <div className="month-card-stat-value text-teal">{fmt(month.income || 0)}</div>
                                         <div className="month-card-stat-label">Pemasukan</div>
                                     </div>
                                     <div className="month-card-stat">
-                                        <div className="month-card-stat-value text-red">{fmt(0)}</div>
+                                        <div className="month-card-stat-value text-red">{fmt(month.expense || 0)}</div>
                                         <div className="month-card-stat-label">Pengeluaran</div>
                                     </div>
                                     <div className="month-card-stat">

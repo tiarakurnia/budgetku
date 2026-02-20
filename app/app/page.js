@@ -190,16 +190,17 @@ export default function Dashboard() {
           {/* Expense Distribution */}
           <div className="card animate-in">
             <h3 className="section-title" style={{ marginBottom: 20 }}>Distribusi Pengeluaran</h3>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 32 }}>
+            <div className="responsive-flex" style={{ alignItems: 'center', justifyContent: 'center', gap: 32 }}>
               <div className="donut-chart" style={{
-                background: `conic-gradient(var(--primary-500) 0% 100%)`
+                background: `conic-gradient(var(--primary-500) 0% 100%)`,
+                flexShrink: 0
               }}>
                 <div className="donut-chart-inner">
-                  <div className="donut-chart-value">{formatIDR(expense || 0)}</div>
+                  <div className="donut-chart-value" style={{ fontSize: 18 }}>{formatIDR(expense || 0)}</div>
                   <div className="donut-chart-label">Total Keluar</div>
                 </div>
               </div>
-              <div className="chart-legend" style={{ flexDirection: 'column', gap: 10 }}>
+              <div className="chart-legend" style={{ flexDirection: 'column', gap: 10, width: '100%', maxWidth: 300 }}>
                 {categoryUsage?.slice(0, 5).map((item, idx) => (
                   <div key={item.id} className="legend-item">
                     <div className="legend-dot" style={{ background: `hsl(${idx * 40}, 70%, 60%)` }}></div>
