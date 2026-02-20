@@ -11,9 +11,13 @@ if (process.env.NODE_ENV === 'production') {
         throw new Error("DATABASE_URL is not defined in production environment variables.");
     }
     try {
-        // TiDB Serverless adapter uses HTTP (443). 
-        // If the URL has :4000, the internal fetch might try to hit port 4000 via HTTPS which fails.
-        const cleanedUrl = process.env.DATABASE_URL.replace(':4000', '');
+        // Transform mysql:// to https:// and remove :4000 for the HTTP adapter
+        let cleanedUrl = process.env.DATABASE_URL;
+        if (cleanedUrl.startsWith('mysql://')) {
+            cleanedUrl = cleanedUrl.replace('mysql://', 'https://');
+        }
+        cleanedUrl = cleanedUrl.replace(':4000', '');
+
         const connection = connect({ url: cleanedUrl });
         const adapter = new PrismaTiDBCloud(connection);
         prisma = new PrismaClient({ adapter });
@@ -22,6 +26,7 @@ if (process.env.NODE_ENV === 'production') {
         throw err;
     }
 } else {
+    // ... rest of logic
     // ... rest of logic
     if (!globalForPrisma.prisma) {
         globalForPrisma.prisma = new PrismaClient();
