@@ -11,7 +11,8 @@ export async function GET() {
         });
         return NextResponse.json(months);
     } catch (error) {
-        return NextResponse.json({ error: 'Failed to fetch months' }, { status: 500 });
+        console.error("API MONTHS GET ERROR:", error);
+        return NextResponse.json({ error: error.message || 'Failed to fetch months' }, { status: 500 });
     }
 }
 
@@ -46,6 +47,7 @@ export async function POST(request) {
 
         return NextResponse.json(month, { status: 201 });
     } catch (error) {
-        return NextResponse.json({ error: 'Failed to create month' }, { status: 500 });
+        console.error("API MONTHS POST ERROR:", error);
+        return NextResponse.json({ error: error.message || 'Failed to create month' }, { status: 500 });
     }
 }
