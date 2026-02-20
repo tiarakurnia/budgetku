@@ -1,5 +1,3 @@
-// BudgetKu - Database Schema for TiDB (MySQL-compatible)
-
 generator client {
   provider        = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
@@ -10,79 +8,65 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ======================== MONTHS ========================
-
 model Month {
-  id            Int       @id @default(autoincrement())
-  name          String    // e.g. "Februari 2026"
-  year          Int
-  month         Int       // 1-12
-  startBalance  Float     @default(0) @map("start_balance")
-  budgetLimit   Float     @default(0) @map("budget_limit")
-  status        String    @default("active") // active | closed
-  createdAt     DateTime  @default(now()) @map("created_at")
-  updatedAt     DateTime  @updatedAt @map("updated_at")
-
-  transactions  Transaction[]
-  budgets       Budget[]
+  id           Int           @id @default(autoincrement())
+  name         String
+  year         Int
+  month        Int
+  startBalance Float         @default(0) @map("start_balance")
+  budgetLimit  Float         @default(0) @map("budget_limit")
+  status       String        @default("active")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  budgets      Budget[]
+  transactions Transaction[]
 
   @@unique([year, month])
   @@map("months")
 }
 
-// ======================== ACCOUNTS ========================
-
 model Account {
-  id        Int       @id @default(autoincrement())
-  name      String
-  type      String    // Cash | Bank | E-Wallet
-  icon      String    @default("💰")
-  balance   Float     @default(0)
-  color     String    @default("#7c2dff")
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-
+  id           Int           @id @default(autoincrement())
+  name         String
+  type         String
+  icon         String        @default("💰")
+  balance      Float         @default(0)
+  color        String        @default("#7c2dff")
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
   transactions Transaction[]
 
   @@map("accounts")
 }
 
-// ======================== CATEGORIES ========================
-
 model Category {
-  id        Int       @id @default(autoincrement())
-  name      String    @unique
-  emoji     String    @default("📁")
-  type      String    @default("expense") // expense | income
-  active    Boolean   @default(true)
-  createdAt DateTime  @default(now()) @map("created_at")
-
-  transactions Transaction[]
+  id           Int           @id @default(autoincrement())
+  name         String        @unique
+  emoji        String        @default("📁")
+  type         String        @default("expense")
+  active       Boolean       @default(true)
+  createdAt    DateTime      @default(now()) @map("created_at")
   budgets      Budget[]
+  transactions Transaction[]
 
   @@map("categories")
 }
 
-// ======================== TRANSACTIONS ========================
-
 model Transaction {
-  id         Int       @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   name       String
   amount     Float
-  type       String    // income | expense
+  type       String
   note       String?
-  date       DateTime  @db.Date
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
-
-  monthId    Int       @map("month_id")
-  month      Month     @relation(fields: [monthId], references: [id])
-
-  accountId  Int       @map("account_id")
-  account    Account   @relation(fields: [accountId], references: [id])
-
-  categoryId Int       @map("category_id")
-  category   Category  @relation(fields: [categoryId], references: [id])
+  date       DateTime @db.Date
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  monthId    Int      @map("month_id")
+  accountId  Int      @map("account_id")
+  categoryId Int      @map("category_id")
+  account    Account  @relation(fields: [accountId], references: [id])
+  category   Category @relation(fields: [categoryId], references: [id])
+  month      Month    @relation(fields: [monthId], references: [id])
 
   @@index([monthId])
   @@index([accountId])
@@ -91,65 +75,56 @@ model Transaction {
   @@map("transactions")
 }
 
-// ======================== BUDGETS ========================
-
 model Budget {
-  id        Int       @id @default(autoincrement())
-  limit     Float     @default(0) @map("budget_limit")
-  createdAt DateTime  @default(now()) @map("created_at")
-  updatedAt DateTime  @updatedAt @map("updated_at")
-
+  id         Int      @id @default(autoincrement())
+  limit      Float    @default(0) @map("budget_limit")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
   monthId    Int      @map("month_id")
-  month      Month    @relation(fields: [monthId], references: [id])
-
   categoryId Int      @map("category_id")
   category   Category @relation(fields: [categoryId], references: [id])
+  month      Month    @relation(fields: [monthId], references: [id])
 
   @@unique([monthId, categoryId])
+  @@index([categoryId], map: "budgets_category_id_fkey")
   @@map("budgets")
 }
 
-// ======================== DEBTS ========================
-
 model Debt {
-  id           Int       @id @default(autoincrement())
-  name         String
-  icon         String    @default("📋")
-  lender       String    @default("")
-  totalAmount  Float     @map("total_amount")
-  paidAmount   Float     @default(0) @map("paid_amount")
-  monthlyPay   Float     @default(0) @map("monthly_pay")
-  color        String    @default("#00c2ff")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
+  id          Int      @id @default(autoincrement())
+  name        String
+  icon        String   @default("📋")
+  lender      String   @default("")
+  totalAmount Float    @map("total_amount")
+  paidAmount  Float    @default(0) @map("paid_amount")
+  monthlyPay  Float    @default(0) @map("monthly_pay")
+  color       String   @default("#00c2ff")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@map("debts")
 }
 
-// ======================== SAVINGS GOALS ========================
-
 model SavingsGoal {
-  id          Int       @id @default(autoincrement())
-  name        String
-  icon        String    @default("🐷")
-  targetAmt   Float     @map("target_amount")
-  savedAmt    Float     @default(0) @map("saved_amount")
-  monthlyAmt  Float     @default(0) @map("monthly_amount")
-  deadline    DateTime  @db.Date
-  color       String    @default("#00d9a6")
-  createdAt   DateTime  @default(now()) @map("created_at")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
+  id         Int      @id @default(autoincrement())
+  name       String
+  icon       String   @default("🐷")
+  targetAmt  Float    @map("target_amount")
+  savedAmt   Float    @default(0) @map("saved_amount")
+  monthlyAmt Float    @default(0) @map("monthly_amount")
+  deadline   DateTime @db.Date
+  color      String   @default("#00d9a6")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   @@map("savings_goals")
 }
 
-// ======================== SETTINGS ========================
-
 model Setting {
-  id        Int       @id @default(autoincrement())
-  key       String    @unique
-  value     String    @db.Text
-  updatedAt DateTime  @updatedAt @map("updated_at")
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@map("settings")
 }
