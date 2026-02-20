@@ -25,15 +25,25 @@ export default function MonthsPage() {
         startBalance: 0,
         budgetLimit: 0
     });
+    const [error, setError] = useState(null);
 
     const fetchMonths = async () => {
         try {
             setLoading(true);
+            setError(null);
             const res = await fetch('/api/months');
             const data = await res.json();
-            setMonths(data);
+
+            if (Array.isArray(data)) {
+                setMonths(data);
+            } else {
+                setError(data.error || 'Terjadi kesalahan saat memuat data');
+                setMonths([]);
+            }
         } catch (error) {
             console.error('Error fetching months:', error);
+            setError('Gagal menghubungi server');
+            setMonths([]);
         } finally {
             setLoading(false);
         }
@@ -86,6 +96,11 @@ export default function MonthsPage() {
                 </div>
             </div>
             <div className="page-body">
+                {error && (
+                    <div className="card" style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid var(--accent-red)', padding: '12px 20px', marginBottom: 20, color: 'var(--accent-red)', borderRadius: 'var(--radius-md)' }}>
+                        ⚠️ {error}
+                    </div>
+                )}
                 {loading ? (
                     <div style={{ textAlign: 'center', padding: 40 }}>Memuat data bulan...</div>
                 ) : (
