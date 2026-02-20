@@ -32,17 +32,26 @@ export default function MonthsPage() {
             setLoading(true);
             setError(null);
             const res = await fetch('/api/months');
+
+            if (!res.ok) {
+                const text = await res.text();
+                setError(`Server Error (${res.status}): ${res.statusText}`);
+                console.error('Server error response:', text);
+                setMonths([]);
+                return;
+            }
+
             const data = await res.json();
 
             if (Array.isArray(data)) {
                 setMonths(data);
             } else {
-                setError(data.error || 'Terjadi kesalahan saat memuat data');
+                setError(data.error || 'Respons server tidak valid');
                 setMonths([]);
             }
         } catch (error) {
             console.error('Error fetching months:', error);
-            setError('Gagal menghubungi server');
+            setError('Fetch failed: Gagal menghubungi server atau server crash.');
             setMonths([]);
         } finally {
             setLoading(false);
