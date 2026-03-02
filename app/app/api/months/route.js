@@ -73,3 +73,24 @@ export async function POST(request) {
         return NextResponse.json({ error: error.message || 'Failed to create month' }, { status: 500 });
     }
 }
+
+export async function PATCH(request) {
+    try {
+        const data = await request.json();
+        const { id, budgetLimit } = data;
+
+        if (!id) {
+            return NextResponse.json({ error: 'Month ID is required' }, { status: 400 });
+        }
+
+        const updatedMonth = await prisma.month.update({
+            where: { id: parseInt(id) },
+            data: { budgetLimit: parseFloat(budgetLimit) }
+        });
+
+        return NextResponse.json(updatedMonth);
+    } catch (error) {
+        console.error("API MONTHS PATCH ERROR:", error);
+        return NextResponse.json({ error: error.message || 'Failed to update month' }, { status: 500 });
+    }
+}

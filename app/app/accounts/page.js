@@ -20,6 +20,16 @@ export default function AccountsPage() {
     const [newAccount, setNewAccount] = useState({ name: '', type: 'Cash', balance: 0 });
     const [transfer, setTransfer] = useState({ fromAccountId: '', toAccountId: '', amount: 0 });
 
+    // Delete States
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [accountToDelete, setAccountToDelete] = useState(null);
+    const [deleting, setDeleting] = useState(false);
+    const [saving, setSaving] = useState(false);
+
+    // Edit States
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editForm, setEditForm] = useState({ id: '', name: '', type: '', icon: '', balance: 0, color: '' });
+
     const fetchAccounts = async () => {
         try {
             setLoading(true);
@@ -38,19 +48,34 @@ export default function AccountsPage() {
     }, []);
 
     const handleCreateAccount = async () => {
+        if (!newAccount.name.trim()) {
+            alert('Nama akun tidak boleh kosong');
+            return;
+        }
+
         try {
+            setSaving(true);
             const res = await fetch('/api/accounts', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(newAccount)
+                body: JSON.stringify({
+                    ...newAccount,
+                    balance: parseFloat(newAccount.balance) || 0
+                })
             });
             if (res.ok) {
                 setShowModal(false);
                 setNewAccount({ name: '', type: 'Cash', balance: 0 });
                 fetchAccounts();
+            } else {
+                const err = await res.json();
+                alert(err.error || 'Gagal membuat akun');
             }
         } catch (error) {
             console.error('Error creating account:', error);
+            alert('Terjadi kesalahan koneksi');
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -75,6 +100,53 @@ export default function AccountsPage() {
             }
         } catch (error) {
             console.error('Error performing transfer:', error);
+        }
+    };
+
+    const handleUpdateAccount = async () => {
+        if (!editForm.name.trim()) {
+            alert('Nama akun tidak boleh kosong');
+            return;
+        }
+        try {
+            setSaving(true);
+            const res = await fetch(`/api/accounts/${editForm.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(editForm)
+            });
+            if (res.ok) {
+                setShowEditModal(false);
+                fetchAccounts();
+            } else {
+                alert('Gagal memperbarui akun');
+            }
+        } catch (error) {
+            console.error('Error updating account:', error);
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleDeleteAccount = async () => {
+        if (!accountToDelete) return;
+        try {
+            setDeleting(true);
+            const res = await fetch(`/api/accounts/${accountToDelete.id}`, {
+                method: 'DELETE'
+            });
+            if (res.ok) {
+                setShowDeleteModal(false);
+                setAccountToDelete(null);
+                fetchAccounts();
+            } else {
+                const err = await res.json();
+                alert(err.error || 'Gagal menghapus akun');
+            }
+        } catch (error) {
+            console.error('Error deleting account:', error);
+        } finally {
+            setDeleting(false);
         }
     };
 
@@ -131,7 +203,34 @@ export default function AccountsPage() {
                                 </div>
                                 <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
                                     <button className="btn btn-secondary" style={{ flex: 1, fontSize: 12, padding: '8px 12px', justifyContent: 'center' }}>Riwayat</button>
-                                    <button className="btn-icon" style={{ width: 36, height: 36, fontSize: 14 }}>✏️</button>
+                                    <button
+                                        className="btn-icon"
+                                        style={{ width: 36, height: 36, fontSize: 14 }}
+                                        onClick={() => {
+                                            setEditForm(acc);
+                                            setShowEditModal(true);
+                                        }}
+                                    >
+                                        ✏️
+                                    </button>
+                                    <button
+                                        className="btn-icon"
+                                        style={{
+                                            width: 36,
+                                            height: 36,
+                                            fontSize: 14,
+                                            color: '#ff4757',
+                                            background: 'rgba(255, 71, 87, 0.1)',
+                                            border: '1px solid rgba(255, 71, 87, 0.3)'
+                                        }}
+                                        onClick={() => {
+                                            setAccountToDelete(acc);
+                                            setShowDeleteModal(true);
+                                        }}
+                                        title="Hapus Akun"
+                                    >
+                                        🗑️
+                                    </button>
                                 </div>
                             </div>
                         ))}
@@ -182,8 +281,10 @@ export default function AccountsPage() {
                             </div>
                         </div>
                         <div className="modal-footer">
-                            <button className="btn btn-secondary" onClick={() => setShowModal(false)}>Batal</button>
-                            <button className="btn btn-primary" onClick={handleCreateAccount}>Simpan</button>
+                            <button className="btn btn-secondary" onClick={() => setShowModal(false)} disabled={saving}>Batal</button>
+                            <button className="btn btn-primary" onClick={handleCreateAccount} disabled={saving}>
+                                {saving ? 'Menyimpan...' : 'Simpan'}
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -235,6 +336,97 @@ export default function AccountsPage() {
                         <div className="modal-footer">
                             <button className="btn btn-secondary" onClick={() => setShowTransfer(false)}>Batal</button>
                             <button className="btn btn-success" onClick={handleTransfer}>Transfer</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {/* Edit Account Modal */}
+            {showEditModal && (
+                <div className="modal-overlay" onClick={() => !saving && setShowEditModal(false)}>
+                    <div className="modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2 className="modal-title">Edit Akun</h2>
+                            <button className="btn-icon" onClick={() => setShowEditModal(false)} disabled={saving}>✕</button>
+                        </div>
+                        <div className="modal-body">
+                            <div className="form-group">
+                                <label className="form-label">Nama Akun</label>
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    value={editForm.name}
+                                    onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Tipe Akun</label>
+                                <select
+                                    className="form-select"
+                                    value={editForm.type}
+                                    onChange={(e) => setEditForm({ ...editForm, type: e.target.value })}
+                                >
+                                    <option>Cash</option>
+                                    <option>Bank</option>
+                                    <option>E-Wallet</option>
+                                </select>
+                            </div>
+                            <div className="form-group">
+                                <label className="form-label">Saldo Saat Ini (Hanya Visual)</label>
+                                <input
+                                    type="number"
+                                    className="form-input"
+                                    value={editForm.balance}
+                                    disabled
+                                    title="Saldo diubah melalui transaksi"
+                                />
+                                <small style={{ color: 'var(--text-muted)', fontSize: 11 }}>Saldo hanya bisa diubah melalui transaksi atau transfer.</small>
+                            </div>
+
+                            <div style={{ marginTop: 24, borderTop: '1px solid var(--border-color)', paddingTop: 16 }}>
+                                <button
+                                    className="btn btn-danger"
+                                    style={{ width: '100%', justifyContent: 'center', opacity: 0.8 }}
+                                    onClick={() => {
+                                        setShowEditModal(false);
+                                        setAccountToDelete(editForm);
+                                        setShowDeleteModal(true);
+                                    }}
+                                >
+                                    🗑️ Hapus Akun Ini
+                                </button>
+                            </div>
+                        </div>
+                        <div className="modal-footer">
+                            <button className="btn btn-secondary" onClick={() => setShowEditModal(false)} disabled={saving}>Batal</button>
+                            <button className="btn btn-primary" onClick={handleUpdateAccount} disabled={saving}>
+                                {saving ? 'Menyimpan...' : 'Simpan Perubahan'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {showDeleteModal && (
+                <div className="modal-overlay" onClick={() => !deleting && setShowDeleteModal(false)}>
+                    <div className="modal" style={{ maxWidth: 400 }} onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2 className="modal-title">Hapus Akun?</h2>
+                            <button className="btn-icon" onClick={() => setShowDeleteModal(false)} disabled={deleting}>✕</button>
+                        </div>
+                        <div className="modal-body" style={{ textAlign: 'center', padding: '24px 16px' }}>
+                            <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
+                            <p style={{ marginBottom: 8, fontWeight: 600 }}>Apakah Anda yakin ingin menghapus akun <span style={{ color: 'var(--primary-200)' }}>{accountToDelete?.name}</span>?</p>
+                            <p style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>
+                                Tindakan ini tidak dapat dibatalkan. <br />
+                                <strong>Semua data transaksi</strong> yang terkait dengan akun ini juga akan <strong>ikut terhapus</strong>.
+                            </p>
+                        </div>
+                        <div className="modal-footer" style={{ justifyContent: 'center', gap: 12 }}>
+                            <button className="btn btn-secondary" style={{ minWidth: 100 }} onClick={() => setShowDeleteModal(false)} disabled={deleting}>Batal</button>
+                            <button className="btn btn-danger" style={{ minWidth: 100 }} onClick={handleDeleteAccount} disabled={deleting}>
+                                {deleting ? 'Menghapus...' : 'Hapus Akun'}
+                            </button>
                         </div>
                     </div>
                 </div>

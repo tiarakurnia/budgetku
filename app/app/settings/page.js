@@ -51,6 +51,32 @@ export default function SettingsPage() {
         }
     };
 
+    const handleResetData = async () => {
+        const confirmReset = window.confirm(
+            '⚠️ PERINGATAN: Anda yakin ingin menghapus SEMUA data?\n\n' +
+            'Tindakan ini akan menghapus seluruh transaksi, akun, budget, dan kategori. ' +
+            'Data tidak dapat dikembalikan lagi.'
+        );
+
+        if (!confirmReset) return;
+
+        try {
+            setSaving(true);
+            const res = await fetch('/api/settings/reset', { method: 'POST' });
+            if (res.ok) {
+                alert('Data berhasil di-reset ke kondisi awal.');
+                window.location.href = '/'; // Redirect to dashboard
+            } else {
+                alert('Gagal mereset data. Silakan coba lagi.');
+            }
+        } catch (err) {
+            console.error('Reset error:', err);
+            alert('Terjadi kesalahan saat mereset data.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
     if (loading) return <div style={{ textAlign: 'center', padding: 100 }}>Memuat pengaturan...</div>;
 
     const bool = (val) => val === 'true';
@@ -135,7 +161,14 @@ export default function SettingsPage() {
                             <span className="settings-item-label" style={{ color: 'var(--accent-red)' }}>Reset Data</span>
                             <span className="settings-item-desc">Hapus semua data dan mulai dari awal</span>
                         </div>
-                        <button className="btn btn-danger" style={{ fontSize: 12 }}>🗑️ Reset</button>
+                        <button
+                            className="btn btn-danger"
+                            style={{ fontSize: 12 }}
+                            onClick={handleResetData}
+                            disabled={saving}
+                        >
+                            {saving ? '⏳ Memproses...' : '🗑️ Reset'}
+                        </button>
                     </div>
                 </div>
 
